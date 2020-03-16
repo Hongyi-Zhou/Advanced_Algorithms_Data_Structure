@@ -22,11 +22,11 @@ class RBTree
 private:
 	Node *root;
 protected:
-	void rotataLeft(Node *&, Node *&);
+	void rotateLeft(Node *&, Node *&);
 	void rotateRight(Node *&, Node *&);
 	void fixViolation(Node *&, Node *&);
 public:
-	RBTree() {root = NULL};
+	RBTree() {root = NULL;};
 	void insert(const int &n);
 	void inorder();
 	void levelOrder();
@@ -47,7 +47,7 @@ Node* BSTInsert(Node* root, Node* pt)
 	if(pt->data < root->data)
 	{
 		root->left = BSTInsert(root->left, pt);
-		root>left->parent = root;
+		root->left->parent = root;
 	}
 	else if (pt->data > root->data)
 	{
@@ -63,7 +63,7 @@ void levelOrderHelper(Node *root)
 	std::queue<Node*> q;
 	q.push(root);
 
-	while(!q.empty)
+	while(!q.empty())
 	{
 		Node *temp = q.front();
 		cout<<temp->data<< "  ";
@@ -88,7 +88,8 @@ void RBTree::rotateLeft(Node *&root, Node *&pt)
 		root = pt_right;
 	else if (pt == pt->parent->left)
 		pt->parent->left = pt_right;
-	else pt->parent->right = pt_right;
+	else 
+		pt->parent->right = pt_right;
 
 	pt_right->left = pt;
 	pt->right = pt_right;
@@ -96,7 +97,7 @@ void RBTree::rotateLeft(Node *&root, Node *&pt)
 
 void RBTree::rotateRight(Node *&root, Node *&pt)
 {
-	NOde *pt_left = pt->left;
+	Node *pt_left = pt->left;
 	pt->left = pt_left->right;
 	if (pt->left != NULL)
 		pt->left->parent = pt;
@@ -117,5 +118,101 @@ void RBTree::rotateRight(Node *&root, Node *&pt)
 void RBTree::fixViolation(Node *&root, Node *&pt)
 {
 	Node *parent_pt = NULL;
+	Node *grand_parent_pt = NULL;
 
+	while((pt != root) && (pt->color != BLACK) && (pt->parent->color == RED))
+	{
+		parent_pt = pt->parent;
+		grand_parent_pt = pt->parent->parent;
+
+		if (parent_pt == grand_parent_pt->left)
+		{
+			Node *uncle_pt = grand_parent_pt->right;
+
+			if (uncle_pt != NULL && uncle_pt->color == RED)
+			{
+				grand_parent_pt->color = RED;
+				parent_pt->color = BLACK;
+				uncle_pt->color = BLACK;
+				pt = grand_parent_pt;
+			}
+			else
+			{
+				if (pt == parent_pt->right)
+				{
+					rotateLeft(root, parent_pt);
+					pt = parent_pt;
+					parent_pt = pt->parent;
+				}
+
+				rotateRight(root, grand_parent_pt);
+				swap(parent_pt->color, grand_parent_pt->color);
+				pt = parent_pt;
+			}
+		}
+		else
+		{
+			Node *uncle_pt = grand_parent_pt->left;
+
+			if ((uncle_pt != NULL) && (uncle_pt->color == RED))
+			{
+				grand_parent_pt->color = RED;
+				parent_pt->color = BLACK;
+				uncle_pt->color = BLACK;
+				pt = grand_parent_pt;
+			}
+			else
+			{
+				if (pt == parent_pt->left)
+				{
+					rotateRight(root, parent_pt);
+					pt = parent_pt;
+					parent_pt = pt->parent;
+				}
+
+				rotateRight(root, grand_parent_pt);
+				swap(parent_pt->color, grand_parent_pt->color);
+				pt = parent_pt;
+			}
+		}
+	}
+	root->color = BLACK;
 }
+
+void RBTree::insert(const int &data)
+{
+	Node *pt = new Node(data);
+	root = BSTInsert(root, pt);
+	fixViolation(root, pt);
+}
+
+void RBTree::inorder()
+{
+	inorderHelper(root);
+}
+
+void RBTree::levelOrder()
+{
+	levelOrderHelper(root);
+}
+
+int main() 
+{ 
+    RBTree tree; 
+  
+    tree.insert(7); 
+    tree.insert(6); 
+    tree.insert(5); 
+    tree.insert(4); 
+    tree.insert(3); 
+    tree.insert(2); 
+    tree.insert(1); 
+  
+    cout << "Inoder Traversal of Created Tree\n"; 
+    tree.inorder(); 
+  
+    cout << "\n\nLevel Order Traversal of Created Tree\n"; 
+    tree.levelOrder(); 
+  
+    return 0; 
+} 
